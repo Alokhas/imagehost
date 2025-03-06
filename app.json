@@ -31,7 +31,7 @@
     "postdeploy": "pip install -r requirements.txt"
   },
   "addons": [
-    "mongolab"
+    "mongodbatlas"
   ],
   "website": "https://github.com/utkarshdubey2008/imagehost",
   "keywords": [
