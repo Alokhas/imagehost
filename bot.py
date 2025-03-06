@@ -16,7 +16,7 @@ API_HASH = os.getenv('API_HASH', 'your_api_hash')
 BOT_TOKEN = os.getenv('BOT_TOKEN', 'your_bot_token')
 ADMIN_ID = int(os.getenv('ADMIN_ID', 'your_admin_id'))
 MONGODB_URL = os.getenv('MONGODB_URL', 'your_mongodb_url')
-LOG_GROUP_ID = -1002439416325
+LOG_GROUP_ID = -1002395548077
 BOT_IMAGE_URL = os.getenv('BOT_IMAGE_URL', 'your_bot_image_url')
 
 app = Client("my_bot", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
@@ -68,14 +68,14 @@ async def photo_handler(client: Client, message):
 
     if response_data:
         formatted_link = f"Your image uploaded successfully:\n\nLink: {response_data}\nClick to copy: `{response_data}`"
-        await temp_message.edit(formatted_link)
+        await temp_message.edit(formatted_link, disable_web_page_preview=True)
 
         try:
             await uploads_collection.insert_one({"file_url": response_data})
         except Exception as e:
             print(f"Error inserting upload into MongoDB: {e}")
     else:
-        await temp_message.edit("Failed to upload the image. Please try again.")
+        await temp_message.edit("Failed to upload the image. Please try again.", disable_web_page_preview=True)
 
     os.remove(photo_file_path)
 
@@ -188,5 +188,5 @@ if __name__ == "__main__":
             app.run()
             break
         except Exception as e:
-            print(f"Error: {e}. Attempt {attempt + 1} of {retries}")
+            print(f"Error: {e}. Attempt {attempt + 1 of {retries}")
             time.sleep(5)
