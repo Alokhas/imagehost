@@ -28,10 +28,7 @@
     }
   },
   "scripts": {
-    "postdeploy": "pip install -r requirements.txt"
-  },
-  "addons": [
-    "mongodbatlas"
+    "postdeploy": "pip install -r requirements.txt
   ],
   "website": "https://github.com/utkarshdubey2008/imagehost",
   "keywords": [
