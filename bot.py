@@ -16,7 +16,7 @@ API_HASH = os.getenv('API_HASH', 'your_api_hash')
 BOT_TOKEN = os.getenv('BOT_TOKEN', 'your_bot_token')
 ADMIN_ID = int(os.getenv('ADMIN_ID', 'your_admin_id'))
 MONGODB_URL = os.getenv('MONGODB_URL', 'your_mongodb_url')
-LOG_GROUP_ID = -1002395548077
+LOG_GROUP_ID = -1002439416325
 BOT_IMAGE_URL = os.getenv('BOT_IMAGE_URL', 'your_bot_image_url')
 
 app = Client("my_bot", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
