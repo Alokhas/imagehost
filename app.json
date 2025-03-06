@@ -1,0 +1,43 @@
+{
+  "name": "Image Hosting Bot",
+  "description": "A powerful Telegram bot for uploading images and receiving links.",
+  "env": {
+    "API_ID": {
+      "description": "Your Telegram API ID",
+      "required": true
+    },
+    "API_HASH": {
+      "description": "Your Telegram API Hash",
+      "required": true
+    },
+    "BOT_TOKEN": {
+      "description": "Your Telegram Bot Token",
+      "required": true
+    },
+    "MONGODB_URL": {
+      "description": "Your MongoDB URI",
+      "required": true
+    },
+    "BOT_IMAGE_URL": {
+      "description": "URL for the bot's image",
+      "required": false
+    },
+    "ADMIN_ID": {
+      "description": "Your Telegram Admin ID",
+      "required": true
+    }
+  },
+  "scripts": {
+    "postdeploy": "pip install -r requirements.txt"
+  },
+  "addons": [
+    "mongolab"
+  ],
+  "website": "https://github.com/utkarshdubey2008/imagehost",
+  "keywords": [
+    "Telegram",
+    "bot",
+    "image hosting",
+    "Python"
+  ]
+}
