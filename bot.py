@@ -3,11 +3,13 @@ import time
 from threading import Thread
 from flask import Flask
 from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
+from pyrogram.enums import ParseMode
 from dotenv import load_dotenv
 import httpx
 from io import BytesIO
 from motor.motor_asyncio import AsyncIOMotorClient
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+import asyncio
 
 load_dotenv()
 
@@ -26,6 +28,20 @@ client = AsyncIOMotorClient(MONGODB_URL)
 db = client['imagehost_db']
 uploads_collection = db['uploads']
 
+UPLOAD_ANIMATIONS = [
+    "📤 𝚄𝚙𝚕𝚘𝚊𝚍𝚒𝚗𝚐 [▱▱▱▱▱▱▱▱▱▱]",
+    "📤 𝚄𝚙𝚕𝚘𝚊𝚍𝚒𝚗𝚐 [▰▱▱▱▱▱▱▱▱▱]",
+    "📤 𝚄𝚙𝚕𝚘𝚊𝚍𝚒𝚗𝚐 [▰▰▱▱▱▱▱▱▱▱]",
+    "📤 𝚄𝚙𝚕𝚘𝚊𝚍𝚒𝚗𝚐 [▰▰▰▱▱▱▱▱▱▱]",
+    "📤 𝚄𝚙𝚕𝚘𝚊𝚍𝚒𝚗𝚐 [▰▰▰▰▱▱▱▱▱▱]",
+    "📤 𝚄𝚙𝚕𝚘𝚊𝚍𝚒𝚗𝚐 [▰▰▰▰▰▱▱▱▱▱]",
+    "📤 𝚄𝚙𝚕𝚘𝚊𝚍𝚒𝚗𝚐 [▰▰▰▰▰▰▱▱▱▱]",
+    "📤 𝚄𝚙𝚕𝚘𝚊𝚍𝚒𝚗𝚐 [▰▰▰▰▰▰▰▱▱▱]",
+    "📤 𝚄𝚙𝚕𝚘𝚊𝚍𝚒𝚗𝚐 [▰▰▰▰▰▰▰▰▱▱]",
+    "📤 𝚄𝚙𝚕𝚘𝚊𝚍𝚒𝚗𝚐 [▰▰▰▰▰▰▰▰▰▱]",
+    "📤 𝚄𝚙𝚕𝚘𝚊𝚍𝚒𝚗𝚐 [▰▰▰▰▰▰▰▰▰▰]"
+]
+
 @health_app.route('/health', methods=['GET'])
 def health_check():
     return "Bot is running", 200
@@ -36,9 +52,9 @@ def run_flask():
 Thread(target=run_flask, daemon=True).start()
 
 async def log_new_user(user_id, username):
-    message = f"New user 😗\nId: {user_id}\nUsername: {username}\n#new_user"
+    message = f"**📱 New User Connected!**\n\n👤 User: {username}\n🆔 ID: `{user_id}`\n\n#new_user"
     try:
-        await app.send_message(LOG_GROUP_ID, message)
+        await app.send_message(LOG_GROUP_ID, message, parse_mode=ParseMode.MARKDOWN)
     except Exception as e:
         print("Error sending log message:", e)
 
@@ -57,30 +73,58 @@ async def upload_file_to_envs(file_content: BytesIO, file_name="image.jpg"):
             return None
 
 @app.on_message(filters.photo)
-async def photo_handler(client: Client, message):
+async def photo_handler(client: Client, message: Message):
+    progress_msg = await message.reply_text("⚡ 𝙸𝚗𝚒𝚝𝚒𝚊𝚕𝚒𝚣𝚒𝚗𝚐 𝚄𝚙𝚕𝚘𝚊𝚍...")
+    
     photo_file_path = await message.download()
     with open(photo_file_path, 'rb') as f:
         photo_bytes = BytesIO(f.read())
 
-    temp_message = await message.reply("Uploading your image to envs.sh...")
+    for animation in UPLOAD_ANIMATIONS:
+        try:
+            await progress_msg.edit_text(animation)
+            await asyncio.sleep(0.3)
+        except Exception:
+            pass
 
     response_data = await upload_file_to_envs(photo_bytes)
 
     if response_data:
-        formatted_link = f"Your image uploaded successfully:\n\nLink: {response_data}\nClick to copy: `{response_data}`"
-        await temp_message.edit(formatted_link, disable_web_page_preview=True)
+        buttons = [
+            [
+                InlineKeyboardButton("🔗 Open Link", url=response_data),
+                InlineKeyboardButton("📋 Copy Link", callback_data=f"copy_{response_data}")
+            ],
+            [InlineKeyboardButton("⭐️ Share Link", callback_data=f"share_{response_data}")]
+        ]
+        
+        success_text = (
+            "**✨ 𝙸𝚖𝚊𝚐𝚎 𝚄𝚙𝚕𝚘𝚊𝚍𝚎𝚍 𝚂𝚞𝚌𝚌𝚎𝚜𝚜𝚏𝚞𝚕𝚕𝚢!**\n\n"
+            f"🔗 **Link:** `{response_data}`\n"
+            "📥 **Click buttons below to interact**"
+        )
+        
+        await progress_msg.edit_text(
+            success_text,
+            reply_markup=InlineKeyboardMarkup(buttons),
+            disable_web_page_preview=True,
+            parse_mode=ParseMode.MARKDOWN
+        )
 
         try:
             await uploads_collection.insert_one({"file_url": response_data})
         except Exception as e:
             print(f"Error inserting upload into MongoDB: {e}")
     else:
-        await temp_message.edit("Failed to upload the image. Please try again.", disable_web_page_preview=True)
+        await progress_msg.edit_text(
+            "❌ **𝙵𝚊𝚒𝚕𝚎𝚍 𝚝𝚘 𝚞𝚙𝚕𝚘𝚊𝚍 𝚝𝚑𝚎 𝚒𝚖𝚊𝚐𝚎**\n𝙿𝚕𝚎𝚊𝚜𝚎 𝚝𝚛𝚢 𝚊𝚐𝚊𝚒𝚗.",
+            parse_mode=ParseMode.MARKDOWN
+        )
 
     os.remove(photo_file_path)
 
 @app.on_message(filters.command("start"))
-async def start_command(client: Client, message):
+async def start_command(client: Client, message: Message):
     user_id = message.from_user.id
     username = message.from_user.username or "N/A"
 
@@ -94,99 +138,75 @@ async def start_command(client: Client, message):
         
         if existing_user is None:
             await db.users.insert_one(user_data)
-            print("User data updated:", user_data)
             await log_new_user(user_id, username)
-        else:
-            print("User already exists in the database:", user_data)
-
     except Exception as e:
         print("Error updating user data:", e)
     
     buttons = [
         [
-            InlineKeyboardButton("Updates🔊", url="https://t.me/Thealphabotz"),
-            InlineKeyboardButton("Support🛠️", url="https://t.me/alphabotzchat")
+            InlineKeyboardButton("📢 Updates", url="https://t.me/Thealphabotz"),
+            InlineKeyboardButton("💬 Support", url="https://t.me/alphabotzchat")
         ],
         [
-            InlineKeyboardButton("donate🦺", url="https://t.me/adarsh2626"),
-            InlineKeyboardButton("Source", url="https://t.me/alphabotzchat/599")
+            InlineKeyboardButton("💝 Donate", url="https://t.me/adarsh2626"),
+            InlineKeyboardButton("ℹ️ Help", callback_data="help")
         ]
     ]
     
-    reply_markup = InlineKeyboardMarkup(buttons)  
-
+    welcome_text = (
+        "**🌟 Welcome to ImageHost Bot!**\n\n"
+        "📸 Send me any image and I'll provide you with:\n"
+        "• 🚀 Instant Upload\n"
+        "• 🔗 Direct Link\n"
+        "• 📱 Beautiful Preview\n\n"
+        "**Features:**\n"
+        "• 💫 Animated Upload Progress\n"
+        "• 🎯 No Web Preview\n"
+        "• 🎨 Stylish Interface\n\n"
+        "_Select an option below to continue:_"
+    )
+    
     await message.reply_photo(
         photo=BOT_IMAGE_URL,
-        caption=(
-            "Welcome to ImageHost Bot! Send me an image, and I'll upload it for you.\n\n"
-            "I can help you host your images and provide you with a shareable link.\n"
-            "Feel free to reach out if you have any questions!"
-        ),
-        reply_markup=reply_markup
+        caption=welcome_text,
+        reply_markup=InlineKeyboardMarkup(buttons),
+        parse_mode=ParseMode.MARKDOWN
     )
 
-@app.on_message(filters.command("help"))
-async def help_cmd(client: Client, message):
-    buttons = [
-        [InlineKeyboardButton("Close", callback_data="close")]
-    ]
+@app.on_callback_query()
+async def callback_handler(client: Client, callback_query):
+    data = callback_query.data
     
-    reply_markup = InlineKeyboardMarkup(buttons)
-
-    await message.reply(
-        "Here are some commands you can use:\n"
-        "/start - Start the bot\n"
-        "/help - Get help with commands\n"
-        "/stats - View bot statistics (Admin only)\n"
-        "/broadcast - Broadcast a message to all users (Admin only)\n"
-        "Send me a photo to upload it and I'll provide a shareable link.\n",
-        reply_markup=reply_markup
-    )
-
-@app.on_message(filters.command("stats") & filters.user(ADMIN_ID))
-async def stats_cmd(client: Client, message):
-    try:
-        total_users = await db.users.count_documents({})
-        total_uploads = await uploads_collection.count_documents({})
-
-        await message.reply(
-            f"Bot Statistics:\n"
-            f"Total Users: {total_users}\n"
-            f"Total Uploads: {total_uploads}"
+    if data == "help":
+        help_text = (
+            "**📖 How to use ImageHost Bot:**\n\n"
+            "1️⃣ Send any image to the bot\n"
+            "2️⃣ Wait for upload animation\n"
+            "3️⃣ Get your direct link\n"
+            "4️⃣ Use inline buttons to interact\n\n"
+            "_Need more help? Contact support!_"
         )
-    except Exception as e:
-        await message.reply("An error occurred while fetching statistics.")
-        print(f"Error fetching stats: {e}")
-
-@app.on_message(filters.command("broadcast") & filters.user(ADMIN_ID))
-async def broadcast_cmd(client: Client, message):
-    if message.reply_to_message:
-        reply_message = message.reply_to_message
-        content = reply_message.caption if reply_message.caption else reply_message.text
-        media = reply_message.photo if reply_message.photo else None
         
-        await message.reply("Broadcasting message...")
+        await callback_query.message.edit_text(
+            help_text,
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("🔙 Back", callback_data="back")
+            ]])
+        )
+    
+    elif data == "back":
+        await callback_query.message.delete()
         
-        user_ids = await db.users.find({}, {"user_id": 1}).to_list(length=None)
-        user_ids = [user['user_id'] for user in user_ids]
-
-        for user_id in user_ids:
-            try:
-                if media:
-                    await client.send_photo(user_id, media.file_id, caption=content)
-                else:
-                    await client.send_message(user_id, content)
-            except Exception as e:
-                print(f"Failed to send message to {user_id}: {e}")
+    await callback_query.answer()
 
 if __name__ == "__main__":
     time.sleep(10)
-
     retries = 5
     for attempt in range(retries):
         try:
             app.run()
             break
         except Exception as e:
-            print(f"Error: {e}. Attempt {attempt + 1 of {retries}")
+            print(f"Error: {e}. Attempt {attempt + 1} of {retries}")
             time.sleep(5)
