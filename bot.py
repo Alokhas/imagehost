@@ -13,13 +13,14 @@ import asyncio
 
 load_dotenv()
 
-API_ID = os.getenv('API_ID', 'your_api_id')
-API_HASH = os.getenv('API_HASH', 'your_api_hash')
-BOT_TOKEN = os.getenv('BOT_TOKEN', 'your_bot_token')
-ADMIN_ID = int(os.getenv('ADMIN_ID', 'your_admin_id'))
-MONGODB_URL = os.getenv('MONGODB_URL', 'your_mongodb_url')
-LOG_GROUP_ID = -1002395548077
-BOT_IMAGE_URL = os.getenv('BOT_IMAGE_URL', 'your_bot_image_url')
+API_ID = os.getenv('API_ID', '28647200')
+API_HASH = os.getenv('API_HASH', '42e71744fb1829f43010bd6003224daf')
+BOT_TOKEN = os.getenv('BOT_TOKEN', '6770440133:AAF-bGyAAnntFKioNs22O6M2hLieWQO4crU')
+ADMIN_ID = int(os.getenv('ADMIN_ID', '6667876837'))
+MONGODB_URL = os.getenv('MONGODB_URL', 'mongodb+srv://FILES:FILES@cluster0.j83kdbu.mongodb.net/?retryWrites=true&w=majority
+ENV=True')
+LOG_GROUP_ID = -1001599827340 
+BOT_IMAGE_URL = os.getenv('BOT_IMAGE_URL', 'https://unitedcamps.in/Images/IMG_1742011080.jpg')
 
 app = Client("my_bot", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
 health_app = Flask(__name__)
